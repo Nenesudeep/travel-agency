@@ -1,19 +1,24 @@
-import { Link, NavLink } from "react-router";
+import {Link, NavLink, useLoaderData, useNavigate} from "react-router";
 import { sidebarItems } from "~/constants";
 import { cn } from "~/lib/utils";
+import {logOutUser} from "~/appwrite/auth";
 
 const NavItems = ({handleClick}:{handleClick?:() => void}) => {
-    const user = {
-        name : 'Adrian',
-        email:'contact@jsmastery.pro',
-        imageUrl:'assets/images/david.webp'
+    const user = useLoaderData(); // this is default in react-router
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logOutUser()
+        //localStorage.removeItem('user');
+        navigate('/sign-in')
     }
+
   return( 
     <div className="h-full">
         <section className="nav-items h-full">
             <Link className="link-logo" to={'/'}>
                <img src="/assets/icons/logo.svg" alt="logo" className="size-[30px]"/>
-               <h1>Tourvisto</h1>
+               <h1>Tour-Visto</h1>
             </Link>
 
             <div className="container h-full">
@@ -38,18 +43,16 @@ const NavItems = ({handleClick}:{handleClick?:() => void}) => {
                 </nav>
 
                 <footer className="nav-footer mt-auto">
-                    <img src={user?.imageUrl || 'assets/images/david.webp'} alt={user?.name || 'David'}/>
+                    <img src={user?.imageUrl || "/assets/images/david.webp"} alt={user?.name || 'David'} referrerPolicy="no-referrer"/>
                     <article>
                         <h2>{user?.name}</h2>
                         <p>{user?.email}</p>
                     </article>
 
-                    <button onClick={()=>{
-                        console.log('logout')
-                    }}
+                    <button onClick={handleLogout}
                     className="cursor-pointer"
                     >
-                        <img src="assets/icons/logout.svg" alt="logo" className="size-6" />
+                        <img src="/assets/icons/logout.svg" alt="logo" className="size-6" />
 
                     </button>
                 </footer>

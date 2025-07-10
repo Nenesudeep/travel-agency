@@ -1,10 +1,15 @@
-import {OAuthProvider, Query} from "appwrite";
+import {ID,OAuthProvider, Query} from "appwrite";
 import {account, appWriteConfig, database} from "./client";
 import { redirect } from "react-router";
 
 export const loginWithGoogle= async () => {
     try {
-        account.createOAuth2Session(OAuthProvider.Google)
+        // Specify the success URL
+        const successUrl = window.location.origin + '/'; // Redirect to home
+
+        const failureUrl = window.location.origin + '/sign-in'; // Redirect to sign-in page
+
+        account.createOAuth2Session(OAuthProvider.Google,successUrl,failureUrl);
 
     } catch (e) {
         console.log('loginWithGoogle',e)
@@ -94,7 +99,7 @@ export const getGooglePicture = async () => {
         if (!profilePhoto || !profilePhoto.url) {
             return null; // No photo available
         }
-
+        console.log('profilePhoto',profilePhoto);
         return profilePhoto.url;
     } catch (e) {
         console.error('Error fetching Google profile picture:', e);
@@ -154,9 +159,10 @@ export const storeUserData= async () => {
         return newDocument;
     } catch (e) {
         console.error('Error storing user data:', e);
-        return null;
+        throw e;
     }
 }
+
 
 export const getExistingData= async (userId) => {
     try {
@@ -169,7 +175,8 @@ export const getExistingData= async (userId) => {
             appWriteConfig.userCollectionId,
             [
                 Query.equal('accountId', userId),
-                Query.select(['name', 'email', 'imageUrl', 'joinedAt', 'accountId'])
+                Query.select(['name', 'email', 'imageUrl', 'joinedAt', 'accountId','status'])
+                // we need to exttract the data from the user so all the values so then I missed the status sate
             ]
         );
 
@@ -181,5 +188,24 @@ export const getExistingData= async (userId) => {
     } catch (e) {
         console.error('Error getting existing data:', e);
         return null;
+    }
+}
+
+
+export const getAllUsers = async (limit : number,offset : number) => {
+    try {
+        const {documents:users, total} =await database.listDocuments(
+            appWriteConfig.databaseId,
+            appWriteConfig.userCollectionId,
+            [
+                Query.limit(limit),Query.offset(offset), // dynamically get the data from the params
+            ]
+        )
+        if(total === 0) return {users:[],total:0}
+
+        return {users,total} // if we get the data we return it
+    } catch (e) {
+        console.log('Error fetching users',e)
+        return {users:[],total:0} // if we get an error we return an empty array
     }
 }
